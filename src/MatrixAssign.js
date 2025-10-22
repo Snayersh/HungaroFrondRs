@@ -4,8 +4,8 @@ import MatrixChart from "./MatrixChart";
 import "./MatrixAssign.css";
 
 const MatrixAssign = () => {
-  const [rows, setRows] = useState(4);
-  const [cols, setCols] = useState(4);
+  const [rows, setRows] = useState(2);
+  const [cols, setCols] = useState(2);
   const [matrix, setMatrix] = useState([]);
   const [matrixSet, setMatrixSet] = useState(false);
   const [result, setResult] = useState(null);
@@ -15,7 +15,7 @@ const MatrixAssign = () => {
   const [assignType, setAssignType] = useState("min");
 
   const createMatrix = (r, c) =>
-    Array.from({ length: r }, () => Array.from({ length: c }, () => 0));
+    Array.from({ length: r }, () => Array.from({ length: c }, () => ""));
 
   const createLabels = (length) => Array.from({ length }, () => "");
 
@@ -112,10 +112,13 @@ const MatrixAssign = () => {
       const reduced = reduceMatrix(squareMatrix);
       setReducedMatrix(reduced);
 
-      const res = await axios.post("https://hungarobackendr.onrender.com/hungarian", {
-        costMatrix: currentMatrix,
-        assignType,
-      });
+      const res = await axios.post(
+        "https://hungarobackendr.onrender.com/hungarian",
+        {
+          costMatrix: currentMatrix,
+          assignType,
+        }
+      );
 
       setMatrix(currentMatrix);
       setReducedMatrix(res.data.reducedMatrix);
@@ -200,9 +203,8 @@ const MatrixAssign = () => {
             {row.map((val, j) => (
               <td key={j}>
                 <input
-                  type="number"
+                  type="text"
                   value={val}
-                  min="0"
                   onChange={(e) =>
                     readOnly || assignments
                       ? null
@@ -218,6 +220,8 @@ const MatrixAssign = () => {
                         ? "lightgreen"
                         : "inherit",
                   }}
+                  inputMode="decimal"
+                  pattern="[0-9]*"
                 />
               </td>
             ))}
@@ -337,8 +341,8 @@ const MatrixAssign = () => {
                   {generateAssignmentText(
                     result.minResult.assignments,
                     matrix,
-                    rowLabels, 
-                    colLabels 
+                    rowLabels,
+                    colLabels
                   ).map((line, idx) => (
                     <li key={idx}>{line}</li>
                   ))}
