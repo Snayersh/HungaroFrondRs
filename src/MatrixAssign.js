@@ -38,16 +38,18 @@ const MatrixAssign = () => {
     setAssignType("min");
   };
 
-  const handleChangeValue = (i, j, value) => {
-    const newMatrix = matrix.map((row, rowIndex) =>
-      row.map((val, colIndex) =>
-        rowIndex === i && colIndex === j
-          ? Math.max(0, parseFloat(value) || 0)
-          : val
-      )
-    );
-    setMatrix(newMatrix);
-  };
+ const handleChangeValue = (i, j, value) => {
+  const cleanValue = value.replace(/[^\d.]/g, "");
+  const num = parseFloat(cleanValue) || 0;
+
+  const newMatrix = matrix.map((row, rowIndex) =>
+    row.map((val, colIndex) =>
+      rowIndex === i && colIndex === j ? num : val
+    )
+  );
+  setMatrix(newMatrix);
+};
+
 
   const handleChangeRowLabel = (index, value) => {
     const newLabels = [...rowLabels];
@@ -237,36 +239,35 @@ const MatrixAssign = () => {
 
       {!matrixSet && (
         <div className="controls">
-          <label>
-            Filas:
-            <input
-              type="number"
-              value={rows}
-              min="1"
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                if (!isNaN(value) && value > 0) {
-                  setRows(value);
-                }
-              }}
-            />
-          </label>
+       <label>
+  Filas:
+  <input
+    type="text"
+    inputMode="decimal"
+    pattern="[0-9]*"
+    value={rows}
+    placeholder="Ej. 2"
+    onChange={(e) => {
+      const clean = e.target.value.replace(/[^\d]/g, "");
+      setRows(clean === "" ? "" : parseInt(clean));
+    }}
+  />
+</label>
 
           <label>
-            Columnas:
-            <input
-              type="number"
-              value={cols}
-              min="1"
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                if (!isNaN(value) && value > 0) {
-                  setCols(value);
-                }
-              }}
-            />
-          </label>
-
+  Columnas:
+  <input
+    type="text"
+    inputMode="decimal"
+    pattern="[0-9]*"
+    value={cols}
+    placeholder="Ej. 2"
+    onChange={(e) => {
+      const clean = e.target.value.replace(/[^\d]/g, "");
+      setCols(clean === "" ? "" : parseInt(clean));
+    }}
+  />
+</label>
           <button onClick={handleSetMatrix}>Establecer matriz</button>
         </div>
       )}
