@@ -112,7 +112,7 @@ const MatrixAssign = () => {
       const reduced = reduceMatrix(squareMatrix);
       setReducedMatrix(reduced);
 
-      const res = await axios.post("http://localhost:3000/hungarian", {
+      const res = await axios.post("https://hungarobackendr.onrender.com/hungarian", {
         costMatrix: currentMatrix,
         assignType,
       });
