@@ -21,27 +21,36 @@ const getRandomColor = (index) => {
   return colors[index % colors.length];
 };
 
-const MatrixChart = ({ assignments, matrix, rowLabels }) => {
-  if (
-    !assignments ||
-    !matrix ||
-    matrix.length === 0 ||
-    assignments.length === 0
-  ) {
+const MatrixChart = ({ assignments, matrix, rowLabels = [], colLabels = [] }) => {
+  if (!assignments || !matrix || matrix.length === 0 || assignments.length === 0) {
     return <p style={{ textAlign: 'center' }}>No hay datos para mostrar el gráfico.</p>;
   }
 
-  const labels = assignments.map((col, row) =>
-    rowLabels?.[row] || `Empleado ${row + 1}`
-  );
+const chartRowLabels = rowLabels.map((label, i) => label?.trim() || `Empleado ${i + 1}`);
+const chartColLabels = colLabels.map((label, i) => label?.trim() || `Trabajo ${i + 1}`);
 
-  const values = assignments.map((col, row) => {
-    const fila = matrix[row];
-    if (!fila || col === null || col === undefined) return 0;
-    return fila[col] ?? 0;
-  });
 
-  const backgroundColors = assignments.map((_, i) => getRandomColor(i));
+const validAssignments = assignments
+  .map((colIndex, rowIndex) => {
+    if (rowIndex >= matrix.length || colIndex >= matrix[0].length) return null;
+    return { rowIndex, colIndex };
+  })
+  .filter(Boolean);
+;
+
+  if (validAssignments.length === 0) {
+    return <p style={{ textAlign: 'center' }}>No hay datos reales para graficar.</p>;
+  }
+
+  const labels = validAssignments.map(({ rowIndex }) => chartRowLabels[rowIndex]);
+
+const values = validAssignments.map(({ rowIndex, colIndex }) => {
+  const val = matrix[rowIndex]?.[colIndex] ?? 0;
+  return Number(val.toFixed(2));
+});
+
+
+  const backgroundColors = validAssignments.map((_, i) => getRandomColor(i));
 
   const data = {
     labels,

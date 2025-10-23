@@ -20,9 +20,17 @@ const MatrixAssign = () => {
   const createLabels = (length) => Array.from({ length }, () => "");
 
   const handleSetMatrix = () => {
-    setMatrix(createMatrix(rows, cols));
-    setRowLabels(createLabels(rows));
-    setColLabels(createLabels(cols));
+    const r = parseInt(rows);
+    const c = parseInt(cols);
+
+    if (isNaN(r) || isNaN(c) || r <= 0 || c <= 0) {
+      alert("Por favor ingresa valores válidos para filas y columnas.");
+      return;
+    }
+
+    setMatrix(createMatrix(r, c));
+    setRowLabels(createLabels(r));
+    setColLabels(createLabels(c));
     setMatrixSet(true);
     setResult(null);
     setReducedMatrix([]);
@@ -38,18 +46,17 @@ const MatrixAssign = () => {
     setAssignType("min");
   };
 
- const handleChangeValue = (i, j, value) => {
-  const cleanValue = value.replace(/[^\d.]/g, "");
-  const num = parseFloat(cleanValue) || 0;
+  const handleChangeValue = (i, j, value) => {
+    // Permitimos que el input quede vacío o sea número flotante
+    const num = value === "" ? "" : parseFloat(value);
 
-  const newMatrix = matrix.map((row, rowIndex) =>
-    row.map((val, colIndex) =>
-      rowIndex === i && colIndex === j ? num : val
-    )
-  );
-  setMatrix(newMatrix);
-};
-
+    const newMatrix = matrix.map((row, rowIndex) =>
+      row.map((val, colIndex) =>
+        rowIndex === i && colIndex === j ? num : val
+      )
+    );
+    setMatrix(newMatrix);
+  };
 
   const handleChangeRowLabel = (index, value) => {
     const newLabels = [...rowLabels];
@@ -65,14 +72,13 @@ const MatrixAssign = () => {
 
   const makeSquareMatrix = (original) => {
     if (!original || original.length === 0) return [[]];
-
     const rowCount = original.length;
     const colCount = original[0]?.length || 0;
     const size = Math.max(rowCount, colCount);
 
     return Array.from({ length: size }, (_, i) =>
       Array.from({ length: size }, (_, j) =>
-        i < rowCount && j < colCount ? original[i][j] : 0
+        i < rowCount && j < colCount ? parseFloat(original[i][j] || 0) : 0
       )
     );
   };
@@ -99,7 +105,7 @@ const MatrixAssign = () => {
   const handleCalculate = async () => {
     try {
       const currentMatrix = matrix.map((row) =>
-        row.map((val) => Math.max(0, parseFloat(val) || 0))
+        row.map((val) => parseFloat(val) || 0)
       );
 
       if (
@@ -133,43 +139,40 @@ const MatrixAssign = () => {
     }
   };
 
-  const generateAssignmentText = (
-    assignments,
-    matrix,
-    rowLabels = [],
-    colLabels = []
-  ) => {
-    if (
-      !assignments ||
-      assignments.length === 0 ||
-      !matrix ||
-      matrix.length === 0
-    ) {
-      return [];
-    }
+  const generateAssignmentText = (assignments, matrix, rowLabels = [], colLabels = []) => {
+  if (!assignments || assignments.length === 0 || !matrix || matrix.length === 0) {
+    return [];
+  }
 
-    return assignments
-      .map((colIndex, rowIndex) => {
-        if (colIndex === null || colIndex === undefined || !matrix[rowIndex])
-          return null;
+  return assignments
+    .map((colIndex, rowIndex) => {
+      if (colIndex === null || colIndex === undefined || !matrix[rowIndex]) return null;
 
-        const empleado =
-          rowLabels[rowIndex]?.trim() || `Empleado ${rowIndex + 1}`;
-        const trabajo =
-          colLabels[colIndex]?.trim() || `Trabajo ${colIndex + 1}`;
-        const costo = matrix[rowIndex]?.[colIndex] ?? 0;
+      const empleado = rowLabels[rowIndex]?.trim() || `Empleado ${rowIndex + 1}`;
+      const trabajo = colLabels[colIndex]?.trim() || `Trabajo ${colIndex + 1}`;
 
-        return `${empleado} va a trabajar como ${trabajo}, cobrando Q${costo}`;
-      })
-      .filter(Boolean);
-  };
+      const costo = matrix[rowIndex]?.[colIndex] ?? 0;
+      if (costo === 0 && rowIndex >= rowLabels.length) return null;
+
+      return `${empleado} va a trabajar como ${trabajo}, cobrando Q${costo.toFixed(2)}`;
+    })
+    .filter(Boolean);
+};
+
 
   const getTotalCost = (assignments, originalMatrix) => {
-    if (!assignments) return 0;
+  if (!assignments) return 0;
 
-    return assignments.reduce((sum, colIndex, rowIndex) => {
-      return sum + (originalMatrix[rowIndex]?.[colIndex] || 0);
-    }, 0);
+  const sum = assignments.reduce((total, colIndex, rowIndex) => {
+    return total + (originalMatrix[rowIndex]?.[colIndex] || 0);
+  }, 0);
+
+  return Number(sum.toFixed(2));
+};
+
+
+  const hasNonZeroValue = (mat) => {
+    return mat.some((row) => row.some((val) => val !== 0));
   };
 
   const renderMatrix = (matrix, assignments = null, readOnly = false) => (
@@ -204,28 +207,24 @@ const MatrixAssign = () => {
             </th>
             {row.map((val, j) => (
               <td key={j}>
-                <input
-                  type="text"
-                  value={val}
-                  onChange={(e) =>
-                    readOnly || assignments
-                      ? null
-                      : handleChangeValue(i, j, e.target.value)
-                  }
-                  className={
-                    assignments && assignments[i] === j ? "assigned" : ""
-                  }
-                  disabled={readOnly || assignments !== null}
-                  style={{
-                    backgroundColor:
-                      assignments && assignments[i] === j
-                        ? "lightgreen"
-                        : "inherit",
-                  }}
-                  inputMode="decimal"
-                  pattern="[0-9]*"
-                />
-              </td>
+  <input
+    type="number"
+    step="any"
+    value={val === "" ? "" : Number(val.toFixed(2))}
+    onChange={(e) =>
+      readOnly || assignments
+        ? null
+        : handleChangeValue(i, j, e.target.value)
+    }
+    className={assignments && assignments[i] === j ? "assigned" : ""}
+    disabled={readOnly || assignments !== null}
+    style={{
+      backgroundColor:
+        assignments && assignments[i] === j ? "lightgreen" : "inherit",
+    }}
+  />
+</td>
+
             ))}
           </tr>
         ))}
@@ -239,35 +238,27 @@ const MatrixAssign = () => {
 
       {!matrixSet && (
         <div className="controls">
-       <label>
-  Filas:
-  <input
-    type="text"
-    inputMode="decimal"
-    pattern="[0-9]*"
-    value={rows}
-    placeholder="Ej. 2"
-    onChange={(e) => {
-      const clean = e.target.value.replace(/[^\d]/g, "");
-      setRows(clean === "" ? "" : parseInt(clean));
-    }}
-  />
-</label>
+          <label>
+            Filas:
+            <input
+              type="number"
+              step="1"
+              value={rows}
+              placeholder="Ej. 2"
+              onChange={(e) => setRows(parseInt(e.target.value) || "")}
+            />
+          </label>
 
           <label>
-  Columnas:
-  <input
-    type="text"
-    inputMode="decimal"
-    pattern="[0-9]*"
-    value={cols}
-    placeholder="Ej. 2"
-    onChange={(e) => {
-      const clean = e.target.value.replace(/[^\d]/g, "");
-      setCols(clean === "" ? "" : parseInt(clean));
-    }}
-  />
-</label>
+            Columnas:
+            <input
+              type="number"
+              step="1"
+              value={cols}
+              placeholder="Ej. 2"
+              onChange={(e) => setCols(parseInt(e.target.value) || "")}
+            />
+          </label>
           <button onClick={handleSetMatrix}>Establecer matriz</button>
         </div>
       )}
@@ -306,7 +297,7 @@ const MatrixAssign = () => {
         </>
       )}
 
-      {reducedMatrix.length > 0 && (
+      {reducedMatrix.length > 0 && hasNonZeroValue(reducedMatrix) && (
         <div>
           <h2>Matriz reducida</h2>
           {renderMatrix(
@@ -335,7 +326,9 @@ const MatrixAssign = () => {
                 assignments={result.minResult.assignments}
                 matrix={matrix}
                 rowLabels={rowLabels}
+                colLabels={colLabels}
               />
+
               <div className="assignment-text">
                 <h3>Detalle de asignaciones:</h3>
                 <ul>
@@ -367,6 +360,7 @@ const MatrixAssign = () => {
                 assignments={result.maxResult.assignments}
                 matrix={matrix}
                 rowLabels={rowLabels}
+                colLabels={colLabels}
               />
 
               <div className="assignment-text">
@@ -394,3 +388,4 @@ const MatrixAssign = () => {
 };
 
 export default MatrixAssign;
+ 
